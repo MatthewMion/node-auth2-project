@@ -12,7 +12,6 @@ const restricted = (req, res, next) => {
       return next({ status: 401, message: "Token invalid" });
     }
     req.decodedJwt = decoded;
-    console.log(decoded);
     next();
   });
   /*
@@ -34,7 +33,7 @@ const restricted = (req, res, next) => {
 
 const only = (role_name) => (req, res, next) => {
   if (req.decodedJwt.role_name !== role_name) {
-    return next({ status: 403, message: "This is not for you" });
+    next({ status: 403, message: "This is not for you" });
     /*
     If the user does not provide a token in the Authorization header with a role_name
     inside its payload matching the role_name passed to this function as its argument:
@@ -45,6 +44,8 @@ const only = (role_name) => (req, res, next) => {
 
     Pull the decoded token from the req object, to avoid verifying it again!
   */
+  } else {
+    next();
   }
 };
 
@@ -71,15 +72,15 @@ const checkUsernameExists = async (req, res, next) => {
 };
 
 const validateRoleName = (req, res, next) => {
-  if (!req.body.role_name || !req.body.role_name.trim()) {
-    req.role_name = "student";
+  if (!req.body.role_name || req.body.role_name.trim() === "") {
+    req.body.role_name = "student";
     next();
   } else if (req.body.role_name.trim() === "admin") {
     next({ status: 422, message: "Role can not be admin" });
   } else if (req.body.role_name.trim().length > 32) {
     next({ status: 422, message: "Role name can not be longer than 32 chars" });
   } else {
-    req.role_name = req.role_name.trim();
+    req.body.role_name = req.body.role_name.trim();
     next();
   }
   /*
